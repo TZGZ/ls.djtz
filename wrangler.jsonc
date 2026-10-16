@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "dj-tz",
+  "name": "ls",
   "main": "worker.ts",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": [
@@ -21,6 +21,6 @@
   ],
   "vars": {
     "ACCESS_TEAM_DOMAIN": "ls-dj-tz.cloudflareaccess.com",
-    "ACCESS_AUD": "REEMPLAZAR_AUD"
+    "ACCESS_AUD": "36d1115dc93db11abb7cce7028a17016c32ad66d06221cd5bae252c53e3ef592"
   }
 }
