@@ -1,0 +1,69 @@
+import {chromium,expect} from '@playwright/test';
+import {createServer} from 'vite';
+const server=await createServer({configFile:'tests/ui/vite.config.mjs'});await server.listen();
+import fs from 'node:fs';
+import ts from 'typescript';
+const mod={exports:{}};new Function('module','exports',ts.transpileModule(fs.readFileSync('app/catalog.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(mod,mod.exports);const packages=mod.exports.catalog;
+const people=[{id:'staff-test',kind:'staff',name:'Técnico Prueba',role:'DJ',phone:'3312345678',version:1}];
+let records=[...packages,...people],saves=0;
+const browser=await chromium.launch({channel:process.platform==='win32'?'msedge':undefined,headless:true});
+const context=await browser.newContext({viewport:{width:1360,height:1000}});
+const errors=[];
+context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
+await context.route('**/api/**',async route=>{
+ const req=route.request(),path=new URL(req.url()).pathname;
+ if(path==='/api/catalog/import')return route.fulfill({json:{ok:true}});
+ if(path==='/api/records'&&req.method()==='GET')return route.fulfill({json:records});
+ if(path==='/api/records'){saves++;const {record}=req.postDataJSON();records=[...records.filter(r=>r.id!==record.id),{...record,version:1}];return route.fulfill({json:{ok:true}});}
+ if(path==='/api/event-operation'){const body=req.postDataJSON();const prior=records.find(r=>r.id===body.id);const record={...prior,[body.field]:body.value,version:prior.version+1};records=records.map(r=>r.id===record.id?record:r);return route.fulfill({json:{record}});}
+ return route.fulfill({json:{ok:true}});
+});
+const page=await context.newPage();
+try{
+ await page.goto('http://127.0.0.1:4174/tests/ui/preview.html');
+ await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();
+ const doc=await context.newPage();await doc.setContent('<html><body style="font:16px Arial"><h1>Contrato de prueba</h1>'+['Cliente: Ana Prueba','Teléfono: 3312345678','Domicilio del cliente: Calle Uno 10','Domicilio del evento: Salon Luna','Fecha del evento: 20/10/2026','Fecha de término: 21/10/2026','Hora de inicio: 8:00 pm','Hora de término: 1:00 am','Paquete: Intermedio','Total contratado: $8,000.00','Anticipo: $2,000.00'].map(t=>`<p>${t}</p>`).join('')+'</body></html>');const pdf=await doc.pdf();await doc.close();
+ await page.getByLabel('Archivo del contrato').setInputFiles({name:'contrato-prueba.pdf',mimeType:'application/pdf',buffer:pdf});
+ await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:30000});
+ await expect(page.getByLabel('Nombre del evento (según el paquete)')).toHaveValue('Intermedio');
+ await expect(page.getByLabel('Tipo de evento',{exact:true})).toHaveValue('EVENTO PRIVADO');
+ await expect(page.getByLabel('Llegada a bodega (base: 3 horas antes)')).toHaveValue('2026-10-20T17:00');
+ await expect(page.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
+ expect(saves).toBe(0);
+ await page.getByRole('checkbox',{name:'Técnico Prueba DJ'}).check();
+ await page.getByLabel('Domicilio del evento *',{exact:true}).fill('Salón corregido por el usuario');
+ await page.screenshot({path:'.wrangler/event-form-desktop.png',fullPage:true});
+ await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);expect(saves).toBe(1);expect(records.at(-1).address).toBe('Salón corregido por el usuario');
+ await page.getByRole('button',{name:'Eventos',exact:true}).click();await page.locator('main .event-row').first().click();
+ await page.getByRole('button',{name:'En carga de equipo',exact:true}).click();await expect(page.locator('.operation-panel b')).toHaveText('En carga de equipo');
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.getByRole('button',{name:'Calendario',exact:true}).click();
+ await page.getByRole('button',{name:'Contraer barra lateral',exact:true}).last().click();
+ await expect(page.locator('.staff-theme')).toHaveClass(/sidebar-collapsed/);
+ await page.getByRole('button',{name:'Contraer barra superior',exact:true}).click();
+ await expect(page.locator('.staff-theme')).toHaveClass(/topbar-collapsed/);
+ await page.getByRole('button',{name:'Expandir barra superior',exact:true}).click();
+ await page.evaluate(()=>window.scrollTo(0,500));expect(await page.locator('.topbar').evaluate(e=>Math.abs(e.getBoundingClientRect().top))).toBeLessThan(2);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'.wrangler/calendar-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.screenshot({path:'.wrangler/event-form-mobile.png',fullPage:true});
+ console.log('PASS: browser PDF import populates editable draft, no automatic save, required staff, save after correction, cross-day defaults, collapsible navigation, sticky topbar and mobile form.');
+ // Verify the reader has no mutation controls and the editor has no financial controls.
+ records=records.map(r=>{if(r.kind==='event'){const {total,deposit,extraRate,notes,...safe}=r;return {...safe,balanceDue:6000};}if(r.kind==='package'){const {total,extraRate,...safe}=r;return safe;}return r;});
+ await page.goto('http://127.0.0.1:4174/tests/ui/preview.html?role=editor');await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await expect(page.getByText('Total contratado (MXN) *',{exact:true})).toHaveCount(0);await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.goto('http://127.0.0.1:4174/tests/ui/preview.html?role=viewer');await page.getByRole('button',{name:'Eventos',exact:true}).click();await expect(page.getByRole('button',{name:'Nuevo evento',exact:true})).toHaveCount(0);
+ await page.locator('main .event-row').first().click();await expect(page.getByRole('button',{name:'Montaje listo',exact:true})).toBeDisabled();await expect(page.getByText('Total',{exact:true})).toHaveCount(0);await expect(page.getByText('Saldo pendiente',{exact:true})).toBeVisible();
+ await page.setViewportSize({width:1360,height:1000});await page.goto('http://127.0.0.1:4174/tests/ui/preview.html?role=public');
+ await page.locator('.neon-package').filter({has:page.getByRole('heading',{name:'Básico',exact:true})}).getByRole('button',{name:'Me interesa este paquete'}).click();
+ await page.locator('.package-customizer details summary').click();await page.getByLabel('Un artículo por línea').fill(packages[2].equipment);
+ await expect(page.locator('.package-customizer h3')).toHaveText('Intermedio');
+ await page.getByLabel('Un artículo por línea').fill(packages[2].equipment+'\n1 láser');await expect(page.locator('.package-customizer h3')).toHaveText('Intermedio personalizado');
+ await expect(page.getByRole('link',{name:'Consultar por WhatsApp'})).toHaveAttribute('href',/Intermedio%20personalizado/);
+ await page.screenshot({path:'.wrangler/package-customizer.png',fullPage:true});
+ await page.getByRole('button',{name:'Usar paquete fijo: Básico',exact:true}).click();await expect(page.locator('.package-customizer h3')).toHaveText('Básico');
+ expect(errors).toEqual([]);console.log('PASS: editor money controls hidden; reader cannot create; public package matching and customized WhatsApp quote; no browser exceptions.');
+ const scan=await context.newPage();await scan.setContent('<html><body style="font:30px Arial;background:white;color:black;padding:40px"><p>Cliente: Ana Prueba</p><p>Telefono: 3312345678</p><p>Domicilio del evento: Salon Luna</p><p>Fecha del evento: 20/10/2026</p><p>Hora de inicio: 20:00</p></body></html>');const image=await scan.screenshot({fullPage:true});await scan.close();
+ await page.goto('http://127.0.0.1:4174/tests/ui/preview.html');await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await page.getByLabel('Archivo del contrato').setInputFiles({name:'contrato-escaneado.png',mimeType:'image/png',buffer:image});
+ await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:120000});await expect(page.getByLabel('Hora de inicio *',{exact:true})).toHaveValue('20:00');await expect(page.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
+ expect(saves).toBe(1);console.log('PASS: scanned contract OCR fills a draft; missing fields and staff still prevent saving.');
+}finally{await browser.close();await server.close();}

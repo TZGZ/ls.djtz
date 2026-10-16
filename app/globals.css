@@ -18,3 +18,46 @@
 .original-poster-photo{aspect-ratio:1.48}.original-poster-photo>img,.montage-grid .original-poster-photo>img{width:222.222%}
 
 .access-manager{padding:28px;max-width:900px}.access-manager>p{line-height:1.6}.access-manager form{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:24px 0}.access-manager form label{display:grid;gap:8px;flex:1;min-width:220px}.access-manager input{padding:12px;border:1px solid var(--line);border-radius:8px;width:100%}.access-manager .event-info{min-width:0}.access-manager h3{overflow-wrap:anywhere}.access-manager .event-row{flex-wrap:wrap;gap:12px}
+/* Staff navigation and contract review */
+.staff-theme{--staff-sidebar:232px}
+.staff-theme>.sidebar{width:var(--staff-sidebar);z-index:40;overflow-y:auto}
+.staff-theme>main{margin-left:var(--staff-sidebar);min-width:0}
+.staff-theme .topbar{position:sticky;top:0;z-index:30;background:#241030f5;backdrop-filter:blur(12px);min-height:64px;gap:12px}
+.staff-theme .topbar-actions,.staff-theme .topbar-controls{display:flex;align-items:center;gap:16px}
+.staff-theme .topbar button{min-width:36px;min-height:36px}
+.staff-theme .sidebar-collapse{margin-bottom:18px;justify-content:flex-start;min-height:36px}
+.staff-theme .sidebar nav button{justify-content:flex-start}
+.staff-theme .sidebar nav button>.nav-text{flex:1;text-align:left;background:none;font-size:inherit;color:inherit;margin:0}
+.staff-theme.sidebar-collapsed{--staff-sidebar:76px}
+.staff-theme.sidebar-collapsed .sidebar{padding:20px 10px}
+.staff-theme.sidebar-collapsed .sidebar .nav-text{display:none!important}
+.staff-theme.sidebar-collapsed .sidebar .brand{padding:0;justify-content:center;margin-bottom:28px}
+.staff-theme.sidebar-collapsed .sidebar nav button{justify-content:center;padding:12px 8px}
+.staff-theme.sidebar-collapsed .sidebar-bottom{padding:0}
+.staff-theme.sidebar-collapsed .profile{justify-content:center}
+.staff-theme.topbar-collapsed .topbar{min-height:44px;height:44px;padding-top:4px;padding-bottom:4px}
+.staff-theme.topbar-collapsed .topbar-meta{display:none}
+.package-customizer,.contract-import,.operation-panel{padding:20px;border:1px solid #815593;border-radius:12px;background:#331640;margin:12px 0;min-width:0}
+.package-customizer p,.contract-import p,.operation-panel p{line-height:1.7;margin:10px 0}
+.package-config-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.package-customizer ul{list-style:none;padding:0;margin:14px 0}
+.package-customizer li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #ffffff18;line-height:1.5}
+.package-customizer li button{font-size:11px;color:#ffbecd}
+.equipment-add{display:flex;gap:8px;flex-wrap:wrap}.equipment-add input{flex:1;min-width:160px}
+.package-customizer input,.package-customizer textarea,.package-customizer select,.contract-import textarea,.contract-import input,.operation-panel input,.operation-panel select{font:inherit;padding:10px;border:1px solid #856096;background:#1c0c27;color:#fff;border-radius:6px;max-width:100%}
+.package-customizer textarea,.contract-import textarea{width:100%;min-height:150px;margin:10px 0}
+.package-customizer summary,.contract-import summary,.operation-panel summary{cursor:pointer;padding:12px 0;line-height:1.6}
+.contract-import label,.operation-panel label,.package-customizer label{display:grid;gap:8px;margin:12px 0}
+.operation-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.operation-panel .chosen{border-color:#eee478;background:#eee47822}
+.operation-panel details{margin-top:15px}.operation-panel details p{font-size:12px;border-top:1px solid #ffffff18;padding-top:8px}
+.quote-summary .package-customizer{text-align:left;padding:16px}.quote-summary .package-customizer h3{font-size:23px;margin:0}.quote-summary .package-customizer p{font-size:12px}
+.staff-theme .detail-money{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+@media(max-width:900px){.staff-theme{--staff-sidebar:200px}.staff-theme>.sidebar{display:flex;padding:20px 12px}.staff-theme .topbar{padding:10px 16px}.staff-theme .topbar-actions{gap:8px}.staff-theme .private{display:none}.staff-theme .content{padding:24px 18px}}
+@media(max-width:640px){.staff-theme{--staff-sidebar:166px}.staff-theme .sidebar .brand{font-size:20px;padding:0}.staff-theme .sidebar nav button{padding:10px 8px;font-size:11px}.staff-theme .sidebar .workspace-tag{margin:20px 0}.staff-theme .topbar-controls>.topbar-meta{display:none}.staff-theme .topbar-actions .web-toggle{display:none}.staff-theme .topbar{padding:6px 10px}.staff-theme .content{padding:18px 12px}.staff-theme .profile{padding:8px 0}.package-customizer,.contract-import,.operation-panel{padding:14px}.staff-theme .page-heading{flex-wrap:wrap;gap:12px}.staff-theme .sidebar .session-name{max-width:100px}}
+@media print{.staff-theme .topbar,.staff-theme .sidebar,.operation-panel button,.operation-panel select,.operation-panel input{display:none!important}.staff-theme>main{margin-left:0!important}}
+.staff-theme>.sidebar{position:fixed;inset:0 auto 0 0;height:100dvh}
+.staff-theme>.overlay{z-index:100;align-items:center;padding:16px}
+.staff-theme .modal{max-height:calc(100dvh - 32px);min-width:0}
+.staff-theme .toast{z-index:60}
+@media(max-width:640px){.staff-theme>.overlay{padding:8px}.staff-theme .modal{max-height:calc(100dvh - 16px)}.staff-theme .period{flex-wrap:wrap}.staff-theme .period h2{min-width:90px}.staff-theme .calendar-layout{display:block}.staff-theme .calendar-panel{margin-bottom:16px}.staff-theme .daily{width:100%}.staff-theme .modal-actions{flex-wrap:wrap}}
+fieldset.form-grid{border:0;margin:0;min-width:0}.contract-section.form-grid{padding:0;width:100%;gap:18px}

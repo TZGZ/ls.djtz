@@ -8,6 +8,20 @@ La cuenta administradora `edwintellez.eatg@gmail.com` gestiona los permisos desd
 - Editor: consulta, creación, modificación y eliminación de registros operativos; no administra cuentas.
 - Solo lectura: consulta de agenda, personal, paquetes y detalles, impresión y exportación de datos; las API rechazan sus escrituras y la importación del catálogo.
 
+### Contratos, importes y operación
+
+Nuevo evento incluye importación de PDF, JPG/PNG/WebP y texto. PDF.js lee el texto; Tesseract.js reconoce páginas escaneadas o fotografías en el dispositivo. El OCR descarga herramientas y datos de idioma desde su CDN la primera vez. El documento y su texto completo no se envían al servidor ni se guardan: solo se guardan los campos revisados cuando el usuario confirma Guardar cambios. Límites: 15 MB, 8 páginas y 100.000 caracteres de texto. PDF protegido, imágenes borrosas o etiquetas no reconocidas pueden requerir captura manual.
+
+El importador agrupa cliente, servicio, lugar/horario e importes según el orden de las etiquetas que detecte; los datos de coordinación y asignación quedan al final. No se ha validado la plantilla original del propietario: el PDF pegado como código binario en el chat no permite reconstruir sus bytes de forma fiable. Adjuntar el PDF original permitirá ajustar etiquetas y distribución. No se guarda un evento sin seleccionar personal. Si falta el tipo se usa EVENTO PRIVADO. Las llegadas base son tres horas antes a bodega y una hora antes al lugar, con fecha incluida y ajuste manual permitido.
+
+Solo el administrador recibe total, anticipos, tarifas y notas de administración. Editor y Solo lectura reciben exclusivamente saldo pendiente; la proyección se aplica en el servidor, también para exportaciones. Las ediciones del editor conservan los importes existentes aunque intente enviar otros valores. Un evento nuevo creado por un editor queda con importe por confirmar hasta que lo complete administración.
+
+Administrador y Editor pueden reportar carga, traslado, llegada, montaje, pago y cierre u horas extra. Solo lectura no escribe. El reporte Pagado no modifica anticipos ni saldos contables. Finalizado también marca el evento como finalizado. El historial conserva los últimos 60 reportes por evento y usa versión para rechazar cambios concurrentes obsoletos.
+
+La personalización modifica una copia del equipo elegido, sin alterar el catálogo. La coincidencia exacta de artículos (independiente del orden, mayúsculas y acentos) toma el nombre del paquete correspondiente. Si hay diferencias usa la mayor similitud entre listas y agrega personalizado; no interpreta equivalencias semánticas ni calcula precios nuevos. Las cotizaciones personalizadas requieren revisión de administración.
+
+Las barras superior y lateral se pueden contraer y recuerdan la preferencia en el navegador; la superior permanece fija al desplazarse.
+
 Los cambios de rol se verifican en D1 en cada solicitud, incluso con sesiones existentes. La interfaz refleja el rol recibido al cargar la página; recarga tras un cambio para actualizar los botones.
 
 Cloudflare Access verifica la identidad con One-time PIN. La política de la aplicación permite el método de inicio de sesión OTP; la autorización operativa se decide en D1 (`staff_access`) en cada solicitud, después de verificar el JWT. Un correo verificado sin alta ve acceso no autorizado y recibe 403 en las API. El secreto antiguo `STAFF_ALLOWED_EMAILS` ya no se consulta. No hacen falta claves de la API de Cloudflare para gestionar usuarios.
