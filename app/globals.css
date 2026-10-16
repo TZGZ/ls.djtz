@@ -35,8 +35,6 @@
 .staff-theme.sidebar-collapsed .sidebar nav button{justify-content:center;padding:12px 8px}
 .staff-theme.sidebar-collapsed .sidebar-bottom{padding:0}
 .staff-theme.sidebar-collapsed .profile{justify-content:center}
-.staff-theme.topbar-collapsed .topbar{min-height:44px;height:44px;padding-top:4px;padding-bottom:4px}
-.staff-theme.topbar-collapsed .topbar-meta{display:none}
 .package-customizer,.contract-import,.operation-panel{padding:20px;border:1px solid #815593;border-radius:12px;background:#331640;margin:12px 0;min-width:0}
 .package-customizer p,.contract-import p,.operation-panel p{line-height:1.7;margin:10px 0}
 .package-config-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -61,3 +59,39 @@
 .staff-theme .toast{z-index:60}
 @media(max-width:640px){.staff-theme>.overlay{padding:8px}.staff-theme .modal{max-height:calc(100dvh - 16px)}.staff-theme .period{flex-wrap:wrap}.staff-theme .period h2{min-width:90px}.staff-theme .calendar-layout{display:block}.staff-theme .calendar-panel{margin-bottom:16px}.staff-theme .daily{width:100%}.staff-theme .modal-actions{flex-wrap:wrap}}
 fieldset.form-grid{border:0;margin:0;min-width:0}.contract-section.form-grid{padding:0;width:100%;gap:18px}
+
+/* Compact navigation and catalog, keeping every action available. */
+.staff-theme .topbar{height:52px;min-height:52px;padding-top:4px;padding-bottom:4px}
+.showroom{overflow:clip}
+.showroom .public-nav{position:sticky;top:0;z-index:45;height:64px;max-width:none;padding:0 max(24px,calc((100% - 1240px)/2));background:#13081df5;backdrop-filter:blur(12px);gap:16px}
+.public-nav .mini-ring{width:38px;height:38px;font-size:16px}
+.public-nav .mini-ring em{font-size:10px}
+.public-nav .neon-wordmark small{margin-top:4px}
+.showroom section[id]{scroll-margin-top:80px}
+.showroom .packages-section,.showroom .extras-section{padding-top:44px;padding-bottom:40px}
+.showroom .neon-packages{gap:16px}
+.showroom .neon-package{padding:18px}
+.showroom .package-top{height:22px;margin-bottom:10px}
+.showroom .neon-package h3{font-size:28px;margin-bottom:8px}
+.showroom .capacity{min-height:0}
+.showroom .package-price{margin:12px 0;min-height:0}
+.showroom .package-price strong{font-size:17px}
+.neon-package .original-poster-photo{aspect-ratio:2.6;margin-bottom:12px}
+.showroom .neon-package .pack-photo{height:125px;margin-bottom:12px}
+.showroom .included{padding-top:12px}
+.showroom .included ul{margin:10px 0 16px;gap:6px}
+.showroom .included li{line-height:1.45;font-size:12px}
+.showroom .pack-bottom>button{padding:11px 12px}
+.showroom .original-complements{aspect-ratio:auto;display:flex;align-items:center;justify-content:center;padding:8px}
+.showroom .original-complements>img{position:static;width:100%;max-width:100%;height:auto;max-height:220px;object-fit:contain;display:block}
+.showroom .extra-options{align-content:start;gap:10px}
+.showroom .extra-options>button{padding:13px 16px}
+@media(max-width:700px){
+ .showroom .public-nav{height:auto;min-height:86px;padding:8px 16px;display:grid;grid-template-columns:1fr auto;gap:7px 12px}
+ .public-nav .neon-wordmark>div{display:block;font-size:9px;letter-spacing:1px}
+ .showroom .public-nav nav{grid-column:1/-1;grid-row:2;justify-content:space-between;gap:12px;width:100%}
+ .showroom .public-nav nav a{display:block;font-size:11px;white-space:nowrap}
+ .public-nav .staff-link{grid-column:2;grid-row:1;padding:8px 10px}
+ .showroom section[id]{scroll-margin-top:104px}
+ .showroom .original-complements>img{max-height:180px}
+}

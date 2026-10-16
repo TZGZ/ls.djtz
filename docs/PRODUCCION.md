@@ -20,7 +20,7 @@ Administrador y Editor pueden reportar carga, traslado, llegada, montaje, pago y
 
 La personalización modifica una copia del equipo elegido, sin alterar el catálogo. La coincidencia exacta de artículos (independiente del orden, mayúsculas y acentos) toma el nombre del paquete correspondiente. Si hay diferencias usa la mayor similitud entre listas y agrega personalizado; no interpreta equivalencias semánticas ni calcula precios nuevos. Las cotizaciones personalizadas requieren revisión de administración.
 
-Las barras superior y lateral se pueden contraer y recuerdan la preferencia en el navegador; la superior permanece fija al desplazarse.
+La barra lateral se puede contraer y recuerda la preferencia en el navegador. La barra superior del staff permanece fija y mide 52 px, sin control para contraerla. El menú público también permanece fijo y compacto, con todos sus enlaces disponibles en móvil. Las tarjetas de paquetes tienen menos espacio interior y la imagen de complementos se muestra completa, sin ampliación ni recorte.
 
 Los cambios de rol se verifican en D1 en cada solicitud, incluso con sesiones existentes. La interfaz refleja el rol recibido al cargar la página; recarga tras un cambio para actualizar los botones.
 
