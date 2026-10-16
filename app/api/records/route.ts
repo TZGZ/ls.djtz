@@ -39,6 +39,7 @@ export async function POST(req:Request){
    const begin=Date.parse(record.date+'T'+record.start),end=Date.parse(record.endDate+'T'+record.end);if(!Number.isFinite(begin)||!Number.isFinite(end)||end<=begin)throw Error('El término debe ser posterior al inicio.');
    if(admin&&(record.total===''||record.total==null))throw Error('Define el total cotizado antes de guardar.');
    if(record.total!=null&&record.total!==''&&([record.total,record.deposit,record.extraRate].some(x=>!Number.isFinite(Number(x||0))||Number(x)<0)||Number(record.deposit)>Number(record.total)))throw Error('Revisa los importes y el anticipo.');
+   if(admin&&record.contractBalance!=null&&record.contractBalance!==''&&(!Number.isFinite(Number(record.contractBalance))||Number(record.contractBalance)<0||Math.abs(Number(record.total)-Number(record.deposit||0)-Number(record.contractBalance))>0.01))throw Error('El importe de Restan debe coincidir con el total menos el anticipo. Revisa los importes del contrato.');
    const rows=await env.DB.prepare('SELECT id,kind,data FROM records').all();
    const packages=rows.results.filter((x:any)=>x.kind==='package').map((x:any)=>({...JSON.parse(x.data),id:x.id})) as ServicePackage[];
    const selected=packages.find(p=>p.id===record.packageId);if(!selected)throw Error('Selecciona un paquete vigente.');

@@ -11,11 +11,22 @@ assert.equal(matcher.matchPackage(catalog,'catalogo-basico',catalog[2].equipment
 assert.equal(matcher.matchPackage(catalog,'catalogo-basico',catalog[2].equipment+'\n1 láser adicional').name,'Intermedio personalizado');
 assert.equal(matcher.matchPackage(catalog,'catalogo-basico',catalog[0].equipment.split('\n').reverse().join('\n')).mode,'fixed');
 const sample='Cliente: Ana Prueba\nTeléfono: 3312345678\nDomicilio del cliente: Calle Uno 10\nDomicilio del evento: Salón Luna\nFecha del evento: 20 de octubre de 2026\nFecha de término: 21/10/2026\nHora de inicio: 8:00 pm\nHora de término: 1:00 am\nPaquete: Intermedio\nTotal contratado: $8,000.00\nAnticipo: $2,000.00';
-const parsed=parser.parseContract(sample,catalog);assert.equal(parsed.draft.client,'Ana Prueba');assert.equal(parsed.draft.date,'2026-10-20');assert.equal(parsed.draft.endDate,'2026-10-21');assert.equal(parsed.draft.start,'20:00');assert.equal(parsed.draft.end,'01:00');assert.equal(parsed.draft.type,'EVENTO PRIVADO');assert.equal(parsed.draft.total,'8000.00');assert.equal(parsed.draft.packageId,'catalogo-intermedio');assert.equal(parsed.missing.length,0);
+const parsed=parser.parseContract(sample,catalog);assert.equal(parsed.draft.client,'Ana Prueba');assert.equal(parsed.draft.date,'2026-10-20');assert.equal(parsed.draft.endDate,'2026-10-21');assert.equal(parsed.draft.start,'20:00');assert.equal(parsed.draft.end,'01:00');assert.equal(parsed.draft.type,'EVENTO PRIVADO');assert.equal(parsed.draft.total,'8000');assert.equal(parsed.draft.packageId,'catalogo-intermedio');assert.equal(parsed.missing.length,0);
 assert.equal(parsed.draft.contractSectionOrder,'client,venue,service,financial');
 assert.throws(()=>parser.parseContract('%PDF-1.7\ncompressed'),/binario/);
 assert.equal(parser.parseContract('Fecha del evento: 99/99/2026').draft.date,undefined);
 assert.ok(parser.parseContract('Cliente: ___').missing.includes('client'));
+const blankTemplate=fs.readFileSync('tests/fixtures/contract-djtz-blank.txt','utf8');
+const empty=parser.parseContract(blankTemplate,catalog);
+assert.equal(empty.found.length,0,'Blank template must not capture clauses, voltage, guarantees, provider or signature');
+assert.equal(empty.draft.type,'EVENTO PRIVADO');assert.equal(empty.missing.length,7);
+const detached=parser.parseContract(blankTemplate+'\nExtras por ubicación = $400\n1,000 2,900\n_ Persona en firma __________________ ARRENDADOR',catalog);
+for(const field of ['client','date','start','total','deposit','contractBalance','extraRate'])assert.equal(detached.draft[field],undefined,'Detached or placeholder data must not fill '+field);
+assert.match(detached.draft.notes,/\$400/);assert.ok(detached.warnings.some(w=>w.includes('separados')));
+const filledTemplate=fs.readFileSync('tests/fixtures/contract-djtz-filled.txt','utf8');const full=parser.parseContract(filledTemplate,catalog);
+assert.equal(full.draft.client,'Ana Prueba');assert.equal(full.draft.clientAddress,'Calle Dos 20');assert.equal(full.draft.phone,'3312345678');assert.equal(full.draft.type,'Boda');assert.equal(full.draft.date,'2026-10-20');assert.equal(full.draft.endDate,'2026-10-21');assert.equal(full.draft.start,'20:00');assert.equal(full.draft.end,'01:00');assert.equal(full.draft.total,'3900');assert.equal(full.draft.deposit,'1000');assert.equal(full.draft.contractBalance,'2900');assert.equal(full.draft.extraRate,'500');assert.equal(full.draft.extras,'1 máquina de humo');assert.match(full.draft.notes,/ubicación = \$400/);assert.equal(full.draft.name,'Intermedio personalizado');assert.equal(full.missing.length,0);
+const derived=parser.parseContract('ANTICIPO $1,000 MXN RESTAN $2,900 MXN');assert.equal(derived.draft.total,'3900');assert.ok(derived.warnings.some(w=>w.includes('calculó')));
+const mismatch=parser.parseContract('Total contratado: $4,000\nANTICIPO $1,000 MXN RESTAN $2,900 MXN');assert.ok(mismatch.warnings.some(w=>w.includes('no coinciden')));
 const sql=new DatabaseSync(':memory:');for(const file of ['0000_icy_blue_blade.sql','0001_records_kind_index.sql','0002_staff_access.sql','0003_staff_roles.sql'])sql.exec(fs.readFileSync('drizzle/'+file,'utf8'));
 const DB={prepare(query){return{bind(...args){return statement(query,args);},...statement(query,[])}}};
 function statement(query,args){return{async first(){return sql.prepare(query).get(...args)||null;},async all(){return{results:sql.prepare(query).all(...args)};},async run(){const r=sql.prepare(query).run(...args);return{meta:{changes:r.changes}};}};}
@@ -44,5 +55,6 @@ response=await operations.POST(request({id:'event-1',version:3,field:'paymentRep
 response=await operations.POST(request({id:'event-1',version:4,field:'closingState',value:'Finalizado'}));assert.equal(response.status,200);assert.equal((await response.json()).record.status,'Finalizado');
 user={email:'reader@example.com'};assert.equal((await records.GET()).status,200);assert.equal((await operations.POST(request({id:'event-1',version:4,field:'operationStage',value:'Montaje listo'}))).status,403);
 user={email:membership.ADMIN_EMAIL};response=await records.POST(request({record:{...event,id:'without-staff',staff:[]}}));assert.equal(response.status,400);assert.match((await response.json()).error,/integrante/);
+response=await records.POST(request({record:{...event,id:'inconsistent-balance',contractBalance:'2900'}}));assert.equal(response.status,400);assert.match((await response.json()).error,/Restan/);
 response=await records.POST(request({record:{...event,id:'event-with-extras',date:'2026-10-22',endDate:'2026-10-22',extras:'1 láser adicional'}}));assert.equal(response.status,200);assert.equal(JSON.parse(sql.prepare('SELECT data FROM records WHERE id=?').get('event-with-extras').data).name,'Intermedio personalizado');
 sql.close();console.log('PASS: contract parsing, package matching, cross-day schedules, real SQL saves, financial redaction/preservation, operational reports, concurrency, reader denial and required staff.');

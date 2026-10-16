@@ -4,6 +4,8 @@ Fecha: 15 de octubre de 2026.
 
 ## Actualización: contratos y operación
 
+16 de octubre: adaptado al texto de la plantilla DJ TZ facilitado por el propietario. Probados formulario en orden contractual, datos en líneas compartidas, cláusulas I/IV, ANTICIPO/RESTAN, importes separados y cargo por ubicación privado sin doble suma. La plantilla vacía no llena cliente, lugar, fechas ni importes; firmas y texto legal no se usan como datos. El ejemplo del propietario conserva los campos principales vacíos y los importes desplazados: se dejan pendientes, con advertencias. Se usan identidades ficticias en las pruebas, sin guardar el nombre de la firmante del chat.
+
 - `npm test`: autorización, JWT, roles y pruebas con SQLite real para guardar eventos, preservar/redactar importes, reportes operativos con versiones, personal obligatorio, horarios con cambio de día, extracción de campos y similitud de paquetes.
 - `npm run typecheck`: aprobado.
 - `npm run test:browser`: aprobado con Edge sin interfaz, componentes aislados y datos sintéticos. Importación de PDF con texto, OCR de imagen, corrección del borrador antes del único guardado, personal obligatorio, controles financieros por rol, reportes, personalización pública y WhatsApp, navegación contraíble y barra fija. Capturas revisadas a 390 px y escritorio.
