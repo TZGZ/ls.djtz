@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dj-tz",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dj-tz-db",
+      "database_id": "4c6248e0-2403-4d5d-acc2-7df807db14b9",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "REEMPLAZAR.cloudflareaccess.com",
+    "ACCESS_AUD": "REEMPLAZAR_AUD"
+  }
+}

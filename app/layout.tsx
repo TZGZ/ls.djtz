@@ -1,0 +1,1 @@
+import "./globals.css"; export const metadata = { title: "DJ TZ | Luz y sonido", description: "Paquetes de luz y sonido, DJ profesional y coordinación de eventos en Guadalajara." }; export default function Layout({children}: {children: React.ReactNode}) {return <html lang="es"><body>{children}</body></html>}
