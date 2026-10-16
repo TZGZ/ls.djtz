@@ -60,11 +60,11 @@ Wrangler entrega una URL como `https://dj-tz.TU-SUBDOMINIO.workers.dev`. Conserv
 
 La ruta `/staff` protege la entrada; el comodín cubre sus subrutas, incluida `/staff/access`. Si el formulario separa Path, introduce `staff`, `staff/*` y `api/*` sin repetir el hostname. No crees tres aplicaciones separadas: el código espera un único AUD. No protejas el hostname completo: la portada `/` y las fotografías deben seguir públicas. No actives protección global de todo el Worker.
 
-6. Crea una política **Allow**, selector **Emails**, con tu correo y los correos exactos del staff. No uses `Everyone` ni `Bypass`.
+6. Crea una política **Allow**, selector **Login methods**, exclusivamente con One-time PIN. Access verifica la identidad; el servidor consulta la lista de permisos en D1 en cada solicitud. No uses Bypass.
 7. Activa One-time PIN como proveedor para esta aplicación. Usa una duración de sesión razonable, por ejemplo 8 horas.
 8. Guarda y copia el **Application Audience (AUD) Tag** de la aplicación.
 
-Cloudflare enviará el código temporal cuando cada usuario solicite iniciar sesión. Dar de alta una persona en el catálogo de Personal NO le da acceso: requiere autorización en Access y en el siguiente paso.
+Cloudflare enviará el código temporal cuando cada usuario solicite iniciar sesión. Dar de alta una persona en el catálogo de Personal NO le da acceso: requiere un alta en Staff → Accesos realizada por la cuenta administradora.
 
 ## 5. Vincular Access con el servidor
 
@@ -79,17 +79,7 @@ En `wrangler.jsonc`, configura:
 
 `ACCESS_TEAM_DOMAIN` no lleva `https://` ni `/` al final. El AUD y el dominio son identificadores de configuración, no contraseñas. No uses una clave API como AUD.
 
-```bat
-npx wrangler secret put STAFF_ALLOWED_EMAILS
-```
-
-Cuando el comando pida el valor, pega tus correos separados por coma:
-
-```text
-tu-correo@ejemplo.com,persona2@ejemplo.com
-```
-
-No copies esos correos al repositorio. La lista es exacta: no acepta comodines. Luego:
+La lista se administra desde **Staff → Accesos** con la cuenta administradora definida en el servidor. El secreto antiguo `STAFF_ALLOWED_EMAILS` ya no se utiliza. Aplica las migraciones remotas antes de publicar. Luego:
 
 ```bat
 npm run deploy
@@ -102,11 +92,11 @@ npm run deploy
 3. Con un correo autorizado entra al dashboard. La primera carga incorpora el catálogo una sola vez.
 4. Crea personal y un evento de prueba. Selecciona paquete, horarios y anticipo. Recarga y comprueba que se conservan.
 5. Intenta asignar el mismo personal a eventos que se traslapen: debe rechazarse.
-6. Cierra sesión; vuelve a entrar al área privada y comprueba que se solicita acceso. Cloudflare puede reutilizar una sesión global todavía vigente; para dar de baja a alguien quítalo de ambas listas y revoca sus sesiones en Access.
+6. Cierra sesión; vuelve a entrar al área privada y comprueba que se solicita acceso. Cloudflare puede reutilizar una sesión global todavía vigente; para dar de baja a alguien usa Retirar acceso en Staff → Accesos. El servidor rechaza sus siguientes solicitudes aunque conserve la sesión.
 7. En otra sesión, un correo no autorizado no debe entrar. Una petición sin JWT a `/api/records` debe recibir el desafío de Access o 401 del servidor, nunca registros.
 8. Comprueba filtros de capacidad, WhatsApp, calendarios y vista móvil. Borra el evento de prueba.
 
-Si aparece "Acceso no autorizado", comprueba ambas listas de correos. Si no reconoce la sesión, comprueba dominio, AUD, rutas y que todos los destinos pertenezcan a la misma aplicación. No desactives los controles para solucionarlo.
+Si aparece "Acceso no autorizado", comprueba la lista de Staff → Accesos. Si no reconoce la sesión, comprueba dominio, AUD, rutas y que todos los destinos pertenezcan a la misma aplicación. No desactives los controles para solucionarlo.
 
 ## 7. Subir a GitHub
 
@@ -139,7 +129,7 @@ git commit -m "Actualiza DJ TZ"
 git push
 ```
 
-Opcional: en Cloudflare, conecta el Worker existente a GitHub desde Builds. Comando de compilación: `npm ci && npm test && npm run build`; comando de despliegue: `npx wrangler deploy`. Selecciona `main` y la carpeta que contiene `package.json`. Las migraciones nuevas deben aplicarse antes del despliegue con `npm run db:remote`; no quedan automatizadas en ese comando. Conserva el secreto `STAFF_ALLOWED_EMAILS` del Worker. Evita desplegar simultáneamente desde tu PC y Builds.
+Opcional: en Cloudflare, conecta el Worker existente a GitHub desde Builds. Comando de compilación: `npm ci && npm test && npm run build`; comando de despliegue: `npx wrangler deploy`. Selecciona `main` y la carpeta que contiene `package.json`. Las migraciones nuevas deben aplicarse antes del despliegue con `npm run db:remote`; no quedan automatizadas en ese comando. Conserva la tabla `staff_access` de D1. Evita desplegar simultáneamente desde tu PC y Builds.
 
 ## 9. Prueba local y respaldo
 

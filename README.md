@@ -39,6 +39,6 @@ Coloca el UUID devuelto en `wrangler.jsonc`, campo `database_id`. Luego sigue la
 ## Estado y alcance
 El catálogo inicial está incluido y se importa una sola vez al abrir el dashboard autorizado. La base nueva comienza sin eventos ni clientes; este ZIP **no es una copia de datos operativos de Sites**. Si ya registraste eventos allí, conserva el sitio anterior y solicita una migración/exportación de esos datos antes del cambio definitivo.
 
-Se conserva un único nivel operativo de staff. Todos los correos autorizados pueden administrar registros; no se incorpora un editor visual completo de página ni separación administrador/empleado en esta adaptación. La firma de contratos se coordina como hasta ahora, fuera del sistema.
+Todos los correos autorizados pueden administrar registros operativos. La cuenta administradora gestiona las altas y bajas de usuarios desde **Staff → Accesos**; consulta [Operación](docs/PRODUCCION.md). La firma de contratos se coordina como hasta ahora, fuera del sistema.
 
 El costo depende del consumo y del plan elegido; no se garantiza gratuidad permanente. No hay conexión automática con tu cuenta ni despliegue realizado por descargar este ZIP.

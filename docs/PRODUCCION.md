@@ -2,7 +2,11 @@
 
 La configuración independiente usa Workers, D1 y Cloudflare Access. El código verifica firma RS256, emisor, audiencia, vigencia e identidad del JWT; después aplica una lista exacta de correos. No confía en los encabezados de identidad de Sites. Si falta configuración o token, deniega acceso. Las escrituras requieren Origin del mismo sitio y JSON. Las rutas internas envían `Cache-Control: private, no-store`.
 
-Para incorporar o retirar staff actualiza la política de Access y el secreto `STAFF_ALLOWED_EMAILS`. Al retirar a alguien, revoca además las sesiones en Access. El registro de Personal es operativo y no una cuenta de autenticación.
+La cuenta administradora `edwintellez.eatg@gmail.com` gestiona los permisos desde **Staff → Accesos**. Puede consultar, agregar y retirar correos; su propio acceso está protegido. El registro de Personal es operativo y no concede acceso.
+
+Cloudflare Access verifica la identidad con One-time PIN. La política de la aplicación permite el método de inicio de sesión OTP; la autorización operativa se decide en D1 (`staff_access`) en cada solicitud, después de verificar el JWT. Un correo verificado sin alta ve acceso no autorizado y recibe 403 en las API. El secreto antiguo `STAFF_ALLOWED_EMAILS` ya no se consulta. No hacen falta claves de la API de Cloudflare para gestionar usuarios.
+
+Retirar un correo bloquea las siguientes solicitudes, incluso con un JWT todavía vigente. No borra información ya descargada ni registros operativos; una solicitud que ya estaba en curso puede finalizar. La cuenta administradora está definida en el servidor; cambiarla requiere un despliegue.
 
 ## Datos
 - La base remota comienza vacía: los paquetes se importan una sola vez en el primer acceso autorizado.
@@ -12,7 +16,7 @@ Para incorporar o retirar staff actualiza la política de Access y el secreto `S
 - Exporta D1 regularmente; la exportación de agenda de la interfaz no reemplaza un respaldo completo.
 
 ## Límites que se conservan
-- Un solo nivel de staff con permisos operativos completos; sin roles diferenciados ni editor visual completo.
+- El staff conserva permisos operativos completos. Solo la cuenta administradora gestiona accesos; no se incorpora editor visual completo.
 - Firma de contrato y pagos coordinados fuera del sitio; no hay cobro bancario automático ni proveedor de firma electrónica integrado.
 - Los cambios concurrentes sobre un mismo registro usan versión. La detección de traslapes es una validación de aplicación; dos creaciones simultáneas pueden superar esa comprobación. Coordina las reservas desde una persona hasta implementar bloqueo transaccional de agenda si hay varios operadores simultáneos.
 - Vinext se conserva del proyecto original y está fijado en el archivo de dependencias; revisa futuras actualizaciones antes de aplicarlas.

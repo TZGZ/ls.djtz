@@ -1,10 +1,11 @@
 import {env} from 'cloudflare:workers';
 import {redirect} from 'next/navigation';
 import {getAccessUser} from './access-auth';
-import {isStaffEmail,isSameOriginMutation} from './staff-policy';
+import {isSameOriginMutation} from './staff-policy';
+import {hasStaffAccess} from './staff-membership';
 export async function staffIdentity(){
  const user=await getAccessUser();
- const allowed=isStaffEmail(user?.email,(env as unknown as {STAFF_ALLOWED_EMAILS?:string}).STAFF_ALLOWED_EMAILS);
+ const allowed=await hasStaffAccess(env.DB,user?.email);
  return {user,allowed};
 }
 export async function requireStaff(){

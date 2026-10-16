@@ -1,0 +1,14 @@
+'use client';
+import {useEffect,useState} from 'react';
+type Member={email:string;granted_at:string};
+export default function StaffAccessManager(){
+ const [members,setMembers]=useState<Member[]>([]),[admin,setAdmin]=useState(''),[email,setEmail]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ async function load(){const r=await fetch('/api/staff-access',{cache:'no-store'});const data=await r.json() as {error?:string;admin:string;members:Member[]};if(!r.ok)throw Error(data.error||'No se pudo cargar la lista.');setAdmin(data.admin);setMembers(data.members);}
+ useEffect(()=>{load().catch(e=>setError(e.message)).finally(()=>setLoading(false));},[]);
+ async function change(value:string,action:'grant'|'revoke'){
+  if(action==='revoke'&&!confirm(`¿Retirar el acceso de ${value}? Sus próximas solicitudes serán rechazadas.`))return;
+  setBusy(true);setError('');setNotice('');
+  try{const r=await fetch('/api/staff-access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:value,action})});const data=await r.json() as {error?:string;admin:string;members:Member[]};if(!r.ok)throw Error(data.error||'No se pudo guardar.');await load();if(action==='grant')setEmail('');setNotice(action==='grant'?'Acceso otorgado. La persona ya puede entrar con su correo y código.':'Acceso retirado.');}catch(e){setError((e as Error).message);}finally{setBusy(false);}
+ }
+ return <section className="panel access-manager"><h2>Accesos al staff</h2><p>Agrega los correos que pueden usar la agenda y administrar eventos. Solo tu cuenta puede cambiar esta lista.</p>{error&&<p className="error" role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}<form onSubmit={e=>{e.preventDefault();change(email,'grant');}}><label>Correo del usuario<input aria-label="Correo del usuario" type="email" maxLength={254} required value={email} onChange={e=>setEmail(e.target.value)} disabled={busy||loading}/></label><button className="primary" disabled={busy||loading}>{busy?'Guardando…':'Otorgar acceso'}</button></form>{loading?<p>Cargando accesos…</p>:<><div className="event-row"><div className="event-info"><h3>{admin}</h3><p>Administrador · Acceso protegido</p></div></div>{members.map(m=><div className="event-row" key={m.email}><div className="event-info"><h3>{m.email}</h3><p>Staff · Alta: {new Date(m.granted_at).toLocaleDateString('es-MX')}</p></div><button className="outline" disabled={busy} onClick={()=>change(m.email,'revoke')}>Retirar acceso</button></div>)}{!members.length&&<p>Aún no has autorizado otras cuentas.</p>}</>}<p>El usuario entra en /staff y verifica su correo con un código. Retirar el acceso bloquea las siguientes solicitudes; no borra sus registros de trabajo.</p></section>;
+}
