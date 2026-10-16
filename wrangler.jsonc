@@ -20,7 +20,7 @@
     }
   ],
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "REEMPLAZAR.cloudflareaccess.com",
+    "ACCESS_TEAM_DOMAIN": "ls-dj-tz.cloudflareaccess.com",
     "ACCESS_AUD": "REEMPLAZAR_AUD"
   }
 }
