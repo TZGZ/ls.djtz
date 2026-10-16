@@ -1,7 +1,7 @@
 import {env} from 'cloudflare:workers';
 import {getAccessUser} from '../../access-auth';
 import {isSameOriginMutation} from '../../staff-policy';
-import {ADMIN_EMAIL,isStaffAdmin,normalizeEmail,validMemberEmail} from '../../staff-membership';
+import {ADMIN_EMAIL,isStaffAdmin,normalizeEmail,validMemberEmail,isAssignableRole} from '../../staff-membership';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'private, no-store'};
 async function guard(req?:Request){
@@ -13,13 +13,13 @@ async function guard(req?:Request){
 }
 export async function GET(){
  const denied=await guard();if(denied)return denied;
- const result=await env.DB.prepare('SELECT email, granted_by, granted_at FROM staff_access ORDER BY email').all();
+ const result=await env.DB.prepare('SELECT email, role, granted_by, granted_at FROM staff_access ORDER BY email').all();
  return Response.json({admin:ADMIN_EMAIL,members:result.results},{headers});
 }
 export async function POST(req:Request){
  const denied=await guard(req);if(denied)return denied;
  if(Number(req.headers.get('content-length'))>2048)return Response.json({error:'Solicitud demasiado grande.'},{status:413,headers});
- let body: {email?:unknown;action?:unknown};
+ let body: {email?:unknown;action?:unknown;role?:unknown};
  try {
   const reader=req.body?.getReader();if(!reader)throw Error();
   const chunks:Uint8Array[]=[];let size=0;
@@ -31,7 +31,8 @@ export async function POST(req:Request){
  if(!validMemberEmail(body.email)||!['grant','revoke'].includes(String(body.action)))return Response.json({error:'Revisa el correo y la acción.'},{status:400,headers});
  const email=normalizeEmail(body.email);
  if(isStaffAdmin(email))return Response.json({error:'La cuenta administradora está protegida y conserva su acceso.'},{status:400,headers});
- if(body.action==='grant')await env.DB.prepare('INSERT INTO staff_access (email,granted_by) VALUES (?,?) ON CONFLICT(email) DO NOTHING').bind(email,ADMIN_EMAIL).run();
+ if(body.action==='grant'&&!isAssignableRole(body.role))return Response.json({error:'Selecciona Editor o Solo lectura.'},{status:400,headers});
+ if(body.action==='grant')await env.DB.prepare('INSERT INTO staff_access (email,granted_by,role) VALUES (?,?,?) ON CONFLICT(email) DO UPDATE SET role=excluded.role').bind(email,ADMIN_EMAIL,body.role).run();
  else await env.DB.prepare('DELETE FROM staff_access WHERE email = ?').bind(email).run();
  return Response.json({ok:true},{headers});
 }

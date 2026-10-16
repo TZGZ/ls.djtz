@@ -4,6 +4,8 @@ Fecha: 15 de octubre de 2026.
 
 ## Actualización: administración de accesos
 
+Roles publicados: Administrador, Editor y Solo lectura. Migración remota `0003_staff_roles.sql` aplicada. Las pruebas verifican lectura sin escrituras, bloqueo de importaciones para lectores, edición sin administración de cuentas, cambios de rol con la misma sesión y rechazo de roles inválidos. TypeScript y despliegue aprobados. El botón y flujo de contratos se mantienen pendientes de recibir el contrato original y confirmar la dirección del flujo (exportación o importación).
+
 - Publicada en `https://ls.djtz.workers.dev`, con gestión exclusiva para la cuenta administradora desde Staff → Accesos.
 - Migración remota `0002_staff_access.sql` aplicada; sin migraciones remotas pendientes.
 - Pruebas y TypeScript aprobados después del cambio: listado y mutaciones solo para el administrador, protección de su cuenta, normalización exacta de correos, rechazo de escrituras desde otro origen y revocación en la siguiente solicitud de una sesión vigente.

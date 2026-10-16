@@ -9,7 +9,7 @@ function moduleAt(file,dependencies={}){
 }
 const policy=moduleAt('app/staff-policy.ts');
 const membership=moduleAt('app/staff-membership.ts');
-const grants=new Set(['staff@example.com']);
+const grants=new Map([['staff@example.com','editor']]);
 assert.equal(policy.isStaffEmail(undefined,'staff@example.com'),false);
 assert.equal(policy.isStaffEmail('staff@example.com',undefined),false);
 assert.equal(policy.isStaffEmail('staff@example.com','*'),false);
@@ -20,7 +20,7 @@ const own='https://test.example/api/records';
 assert.equal(policy.isSameOriginMutation(new Request(own,{headers:{origin:'https://attacker.example'}})),false);
 assert.equal(policy.isSameOriginMutation(new Request(own,{headers:{origin:'https://test.example','content-type':'application/json'}})),true);
 let user=null,queries=0;
-const env={STAFF_ALLOWED_EMAILS:'staff@example.com',DB:{prepare(sql){if(sql.includes('staff_access'))return{bind(email){return{first:async()=>grants.has(email)?{email}:null}}};queries++;return{all:async()=>({results:[]})}}}};
+const env={STAFF_ALLOWED_EMAILS:'staff@example.com',DB:{prepare(sql){if(sql.includes('staff_access'))return{bind(email){return{first:async()=>grants.has(email)?{email,role:grants.get(email)}:null}}};queries++;return{all:async()=>({results:[]})}}}};
 const auth=moduleAt('app/staff-auth.ts',{'cloudflare:workers':{env},'next/navigation':{redirect:(path)=>{throw Error('REDIRECT '+path)}},'./access-auth':{getAccessUser:async()=>user},'./staff-policy':policy,'./staff-membership':membership});
 assert.equal((await auth.staffApiGuard()).status,401);
 await assert.rejects(auth.requireStaff(),/REDIRECT \/staff\/access/);
@@ -54,9 +54,9 @@ assert.equal(membership.isStaffAdmin(' EDWINTELLEZ.EATG@GMAIL.COM '),true);
 assert.equal(membership.isStaffAdmin('edwintellez.eatg@gmail.com.attacker.test'),false);
 assert.equal(membership.validMemberEmail('*'),false);
 assert.equal(membership.validMemberEmail('a@example.com,b@example.com'),false);
-const accessEnv={DB:{prepare(sql){return{bind(email){return{async run(){if(sql.startsWith('INSERT'))grants.add(email);else grants.delete(email);}}},async all(){return{results:[...grants].map(email=>({email}))}}}}}};
+const accessEnv={DB:{prepare(sql){return{bind(email,actor,role){return{async run(){if(sql.startsWith('INSERT'))grants.set(email,role);else grants.delete(email);}}},async all(){return{results:[...grants].map(([email,role])=>({email,role}))}}}}}};
 const management=moduleAt('app/api/staff-access/route.ts',{'cloudflare:workers':{env:accessEnv},'../../access-auth':{getAccessUser:async()=>user},'../../staff-policy':policy,'../../staff-membership':membership});
-function accessRequest(email,action,origin='https://test.example') {return new Request('https://test.example/api/staff-access',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email,action})});}
+function accessRequest(email,action,origin='https://test.example',role='editor') {return new Request('https://test.example/api/staff-access',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email,action,role})});}
 user=null;assert.equal((await management.GET()).status,401);
 user={email:'staff@example.com'};
 assert.equal((await management.GET()).status,403);
@@ -74,3 +74,26 @@ assert.equal((await management.POST(accessRequest('staff@example.com','revoke'))
 assert.equal(await membership.hasStaffAccess(env.DB,'staff@example.com'),false);
 assert.equal(await membership.hasStaffAccess(env.DB,membership.ADMIN_EMAIL),true);
 console.log('PASS: admin-only listing/grants/revocation, protected owner, exact normalized emails, CSRF rejection, and revocation of existing sessions.');
+user={email:membership.ADMIN_EMAIL};
+assert.equal((await management.POST(accessRequest('staff@example.com','grant','https://test.example','admin'))).status,400,'Cannot create a second admin');
+assert.equal((await management.POST(accessRequest('staff@example.com','grant','https://test.example','viewer'))).status,200);
+assert.equal(await membership.getStaffRole(env.DB,'staff@example.com'),'viewer');
+user={userId:'staff',email:'staff@example.com',displayName:'Staff'};
+const beforeViewer=queries;
+assert.equal((await api.POST(accessRequest('staff@example.com','grant'))).status,403);
+assert.equal((await imports.POST(accessRequest('staff@example.com','grant'))).status,403);
+assert.equal(queries,beforeViewer,'Read-only writes denied before operational DB access');
+assert.equal((await api.GET()).status,200,'Read-only can consult records');
+assert.equal((await auth.requireStaff()).role,'viewer');
+assert.equal((await management.GET()).status,403,'Read-only cannot view access management');
+user={email:membership.ADMIN_EMAIL};
+assert.equal((await management.POST(accessRequest('staff@example.com','grant','https://test.example','editor'))).status,200);
+user={email:'staff@example.com'};
+assert.equal(await auth.staffApiGuard(accessRequest('staff@example.com','grant')),null,'Editor can write');
+assert.equal((await management.POST(accessRequest('intruder@example.com','grant'))).status,403,'Editor cannot grant permissions');
+grants.set('staff@example.com','viewer');
+assert.equal((await auth.staffApiGuard(accessRequest('staff@example.com','grant'))).status,403,'Role downgrade takes effect with the same session');
+grants.set('staff@example.com','unexpected');
+assert.equal((await auth.staffApiGuard()).status,403,'Unknown roles fail closed');
+assert.equal(await membership.getStaffRole(env.DB,membership.ADMIN_EMAIL),'admin');
+console.log('PASS: reader can view but cannot mutate or import; editor can write but cannot administer; live role changes and unknown-role denial.');
