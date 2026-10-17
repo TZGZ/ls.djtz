@@ -5,6 +5,13 @@ import {DatabaseSync} from 'node:sqlite';
 function load(file,deps={}){const output=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const mod={exports:{}};new Function('require','module','exports',output)(id=>{if(id in deps)return deps[id];throw Error('Unexpected dependency '+id);},mod,mod.exports);return mod.exports;}
 const utils=load('app/event-utils.ts'),matcher=load('app/package-match.ts'),catalog=load('app/catalog.ts').catalog;
 const parser=load('app/contract-parser.ts',{'./package-match':matcher});
+assert.equal(utils.eventEndDate('2026-10-23','20:00','01:00'),'2026-10-24');
+assert.equal(utils.eventEndDate('2026-12-31','23:00','00:30'),'2027-01-01');
+assert.equal(utils.eventEndDate('2026-10-23','18:00','23:30'),'2026-10-23');
+assert.equal(utils.eventEndDate('2026-02-30','18:00','01:00'),'');
+assert.equal(utils.time12('00:00'),'12:00 AM');assert.equal(utils.time12('12:00'),'12:00 PM');assert.equal(utils.time12('23:30'),'11:30 PM');
+assert.equal(utils.eventOnDate({date:'2026-10-23',endDate:'2026-10-24'},'2026-10-24'),false);
+assert.equal(utils.eventOnDate({date:'2026-10-23'},'2026-10-23'),true);
 assert.equal(utils.eventSchedule('2026-10-20','01:00',3),'2026-10-19T22:00');
 assert.equal(utils.eventSchedule('2026-10-20','01:00',1),'2026-10-20T00:00');
 assert.equal(matcher.matchPackage(catalog,'catalogo-basico',catalog[2].equipment).name,'Intermedio');
@@ -57,4 +64,7 @@ user={email:'reader@example.com'};assert.equal((await records.GET()).status,200)
 user={email:membership.ADMIN_EMAIL};response=await records.POST(request({record:{...event,id:'without-staff',staff:[]}}));assert.equal(response.status,400);assert.match((await response.json()).error,/integrante/);
 response=await records.POST(request({record:{...event,id:'inconsistent-balance',contractBalance:'2900'}}));assert.equal(response.status,400);assert.match((await response.json()).error,/Restan/);
 response=await records.POST(request({record:{...event,id:'event-with-extras',date:'2026-10-22',endDate:'2026-10-22',extras:'1 láser adicional'}}));assert.equal(response.status,200);assert.equal(JSON.parse(sql.prepare('SELECT data FROM records WHERE id=?').get('event-with-extras').data).name,'Intermedio personalizado');
+response=await records.POST(request({record:{...event,id:'overnight',date:'2026-10-23',endDate:undefined,start:'20:00',end:'01:00'}}));assert.equal(response.status,200);assert.equal(JSON.parse(sql.prepare('SELECT data FROM records WHERE id=?').get('overnight').data).endDate,'2026-10-24');
+response=await records.POST(request({record:{...event,id:'overlapping-after-midnight',date:'2026-10-24',start:'00:30',end:'02:00'}}));assert.equal(response.status,400);assert.match((await response.json()).error,/Personal ocupado/);
+response=await records.POST(request({record:{...event,id:'next-day-event',date:'2026-10-24',start:'18:00',end:'23:30'}}));assert.equal(response.status,200);
 sql.close();console.log('PASS: contract parsing, package matching, cross-day schedules, real SQL saves, financial redaction/preservation, operational reports, concurrency, reader denial and required staff.');

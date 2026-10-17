@@ -27,18 +27,18 @@ try{
  await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:30000});
  await expect(page.getByLabel('Nombre del evento (según el paquete)')).toHaveValue('Intermedio');
  await expect(page.getByLabel('Tipo de evento',{exact:true})).toHaveValue('EVENTO PRIVADO');
- await expect(page.getByLabel('Llegada a bodega (base: 3 horas antes)')).toHaveValue('2026-10-20T17:00');
+ await expect(page.getByLabel('Llegada a bodega (base: 3 horas antes): fecha',{exact:true})).toHaveValue('2026-10-20');await expect(page.getByLabel('Llegada a bodega (base: 3 horas antes): hora',{exact:true})).toHaveValue('5');await expect(page.getByLabel('Llegada a bodega (base: 3 horas antes): AM/PM',{exact:true})).toHaveValue('PM');
  await expect(page.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
  expect(saves).toBe(0);
  await page.getByRole('checkbox',{name:'Técnico Prueba DJ'}).check();
  await page.getByLabel('Domicilio del evento *',{exact:true}).fill('Salón corregido por el usuario');
  await page.screenshot({path:'.wrangler/event-form-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
- await expect(page.getByRole('dialog')).toHaveCount(0);expect(saves).toBe(1);expect(records.at(-1).address).toBe('Salón corregido por el usuario');
+ await expect(page.getByRole('dialog')).toHaveCount(0);expect(saves).toBe(1);expect(records.at(-1).address).toBe('Salón corregido por el usuario');expect(records.at(-1).endDate).toBe('2026-10-21');
  await page.getByRole('button',{name:'Eventos',exact:true}).click();await page.locator('main .event-row').first().click();
  await page.getByRole('button',{name:'En carga de equipo',exact:true}).click();await expect(page.locator('.operation-panel b')).toHaveText('En carga de equipo');
  await page.getByRole('button',{name:'Cerrar',exact:true}).click();
- await page.getByRole('button',{name:'Calendario',exact:true}).click();
+ await page.getByRole('button',{name:'Calendario',exact:true}).click();await expect(page.locator('.calendar .day').filter({hasText:'Intermedio'})).toHaveCount(1);await expect(page.getByRole('button',{name:'21 de octubre de 2026, 0 eventos',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Contraer barra lateral',exact:true}).last().click();
  await expect(page.locator('.staff-theme')).toHaveClass(/sidebar-collapsed/);
  await expect(page.getByRole('button',{name:/barra superior/})).toHaveCount(0);
@@ -46,7 +46,10 @@ try{
  await expect(page.locator('.logout-link')).toBeVisible();
  await page.evaluate(()=>window.scrollTo(0,500));expect(await page.locator('.topbar').evaluate(e=>Math.abs(e.getBoundingClientRect().top))).toBeLessThan(2);
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'.wrangler/calendar-mobile.png',fullPage:true});
- await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.screenshot({path:'.wrangler/event-form-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.getByLabel('Fecha del evento *',{exact:true}).fill('2026-10-23');
+ await page.getByLabel('Hora de inicio *: hora',{exact:true}).selectOption('8');await page.getByLabel('Hora de inicio *: AM/PM',{exact:true}).selectOption('PM');
+ await page.getByLabel('Hora de término *: hora',{exact:true}).selectOption('1');await page.getByLabel('Hora de término *: AM/PM',{exact:true}).selectOption('AM');await expect(page.getByText(/Termina al día siguiente/)).toBeVisible();
+ await page.getByLabel('Hora de término *: hora',{exact:true}).selectOption('11');await page.getByLabel('Hora de término *: AM/PM',{exact:true}).selectOption('PM');await expect(page.getByText(/Termina el mismo día/)).toBeVisible();await page.screenshot({path:'.wrangler/event-form-mobile.png',fullPage:true});
  console.log('PASS: browser PDF import populates editable draft, no automatic save, required staff, save after correction, cross-day defaults, collapsible sidebar, compact sticky topbar and mobile form.');
  // Verify the reader has no mutation controls and the editor has no financial controls.
  records=records.map(r=>{if(r.kind==='event'){const {total,deposit,extraRate,notes,...safe}=r;return {...safe,balanceDue:6000};}if(r.kind==='package'){const {total,extraRate,...safe}=r;return safe;}return r;});
@@ -76,11 +79,11 @@ try{
  expect(errors).toEqual([]);console.log('PASS: editor money controls hidden; reader cannot create; public package matching and customized WhatsApp quote; no browser exceptions.');
  const templatePage=await context.newPage();const template=fs.readFileSync('tests/fixtures/contract-djtz-filled.txt','utf8');await templatePage.setContent('<html><body><pre style="font:12px Arial;white-space:pre-wrap">'+template.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre></body></html>');const templatePdf=await templatePage.pdf();await templatePage.close();
  await page.goto('http://127.0.0.1:4174/tests/ui/preview.html');await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await page.getByLabel('Archivo del contrato').setInputFiles({name:'plantilla-djtz.pdf',mimeType:'application/pdf',buffer:templatePdf});
- await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:30000});await expect(page.getByLabel('Teléfono',{exact:true})).toHaveValue('3312345678');await expect(page.getByLabel('Tipo de evento',{exact:true})).toHaveValue('Boda');await expect(page.getByLabel('Restan según el contrato (MXN)',{exact:true})).toHaveValue('2900');await expect(page.getByLabel('Total contratado (MXN) *',{exact:true})).toHaveValue('3900');await expect(page.getByLabel('Fecha de término *',{exact:true})).toHaveValue('2026-10-21');
+ await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:30000});await expect(page.getByLabel('Teléfono',{exact:true})).toHaveValue('3312345678');await expect(page.getByLabel('Tipo de evento',{exact:true})).toHaveValue('Boda');await expect(page.getByLabel('Restan según el contrato (MXN)',{exact:true})).toHaveValue('2900');await expect(page.getByLabel('Total contratado (MXN) *',{exact:true})).toHaveValue('3900');await expect(page.getByText(/Termina al día siguiente/)).toBeVisible();await expect(page.getByLabel('Fecha del evento *',{exact:true})).toHaveValue('2026-10-20');
  expect(await page.locator('.contract-section > h3').allTextContents()).toEqual(['01 / Servicio contratado','02 / Lugar, fecha y horario','03 / Datos del contratante','04 / Importes del contrato','05 / Observaciones y servicios adicionales','06 / Anticipo y saldo']);expect(saves).toBe(1);console.log('PASS: DJ TZ template labels, shared phone/time lines, clause amounts, midnight rollover and contract field order.');
  await page.getByRole('radio',{name:'Básico',exact:true}).check({force:true});await expect(page.getByLabel('Total contratado (MXN) *',{exact:true})).toHaveValue('3900');
  const scan=await context.newPage();await scan.setContent('<html><body style="font:30px Arial;background:white;color:black;padding:40px"><p>Cliente: Ana Prueba</p><p>Telefono: 3312345678</p><p>Domicilio del evento: Salon Luna</p><p>Fecha del evento: 20/10/2026</p><p>Hora de inicio: 20:00</p></body></html>');const image=await scan.screenshot({fullPage:true});await scan.close();
  await page.goto('http://127.0.0.1:4174/tests/ui/preview.html');await page.getByRole('button',{name:'Nuevo evento',exact:true}).click();await page.getByLabel('Archivo del contrato').setInputFiles({name:'contrato-escaneado.png',mimeType:'image/png',buffer:image});
- await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:120000});await expect(page.getByLabel('Hora de inicio *',{exact:true})).toHaveValue('20:00');await expect(page.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
+ await expect(page.getByLabel('Nombre del cliente *',{exact:true})).toHaveValue('Ana Prueba',{timeout:120000});await expect(page.getByLabel('Hora de inicio *: hora',{exact:true})).toHaveValue('8');await expect(page.getByLabel('Hora de inicio *: AM/PM',{exact:true})).toHaveValue('PM');await expect(page.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
  expect(saves).toBe(1);console.log('PASS: scanned contract OCR fills a draft; missing fields and staff still prevent saving.');
 }finally{await browser.close();await server.close();}

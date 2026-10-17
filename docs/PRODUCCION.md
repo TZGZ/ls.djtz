@@ -45,3 +45,5 @@ Retirar un correo bloquea las siguientes solicitudes, incluso con un JWT todaví
 El ZIP está preparado para desplegarse, pero requiere los identificadores reales de tu cuenta, D1, la política Access y el secreto de correos. No se desplegó en tu cuenta durante la adaptación. Comprueba consumo y cuotas; el funcionamiento real dentro del plan gratuito debe medirse, en particular CPU del renderizado y autenticación.
 
 Las vistas previas de versiones están desactivadas en Wrangler. Si habilitas otra URL o dominio, añade protección Access para sus rutas internas y vuelve a probar que el sitio público siga abierto. No registres JWT, códigos de correo o datos de clientes en logs.
+
+La agenda agrupa los eventos solamente por su fecha de inicio. El formulario solicita una fecha y horas de inicio y término con AM/PM; si el término es igual o anterior al inicio se calcula el día siguiente. Se conserva ese intervalo real para detectar cruces del personal durante la madrugada. Los eventos existentes se muestran en su fecha de inicio sin migraciones.

@@ -1,6 +1,6 @@
 import {env} from 'cloudflare:workers';
 import {staffApiGuard,staffIdentity} from '../../staff-auth';
-import {staffRecord,editableEventFields,eventSchedule} from '../../event-utils';
+import {staffRecord,editableEventFields,eventSchedule,eventEndDate} from '../../event-utils';
 import {matchPackage,type ServicePackage} from '../../package-match';
 import {readJson} from '../../request-json';
 export const dynamic='force-dynamic';
@@ -35,7 +35,8 @@ export async function POST(req:Request){
    if(!stored&&input.kind==='package')Object.assign(record,{total:'',extraRate:''});
   }
   if(record.kind==='event'){
-   if(!record.client||!record.date||!record.endDate||!record.start||!record.end||!record.address||!record.packageId)throw Error('Completa cliente, lugar, fechas, horario y paquete.');
+   record.endDate=eventEndDate(record.date,record.start,record.end);
+   if(!record.client||!record.date||!record.endDate||!record.start||!record.end||!record.address||!record.packageId)throw Error('Completa cliente, lugar, fecha, horario y paquete.');
    const begin=Date.parse(record.date+'T'+record.start),end=Date.parse(record.endDate+'T'+record.end);if(!Number.isFinite(begin)||!Number.isFinite(end)||end<=begin)throw Error('El término debe ser posterior al inicio.');
    if(admin&&(record.total===''||record.total==null))throw Error('Define el total cotizado antes de guardar.');
    if(record.total!=null&&record.total!==''&&([record.total,record.deposit,record.extraRate].some(x=>!Number.isFinite(Number(x||0))||Number(x)<0)||Number(record.deposit)>Number(record.total)))throw Error('Revisa los importes y el anticipo.');

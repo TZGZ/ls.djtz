@@ -95,3 +95,5 @@ fieldset.form-grid{border:0;margin:0;min-width:0}.contract-section.form-grid{pad
  .showroom section[id]{scroll-margin-top:104px}
  .showroom .original-complements>img{max-height:180px}
 }
+
+.time-picker{min-width:0;border:0;padding:0;margin:0}.time-picker legend{font-size:12px;margin-bottom:8px}.time-picker>div{display:flex;align-items:center;gap:6px}.time-picker select{min-width:0;flex:1}.time-picker select:last-child{flex:1.2}
