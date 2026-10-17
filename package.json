@@ -9,7 +9,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/staff-access.mjs && node tests/access-jwt.mjs && node tests/events.mjs",
+    "test": "node tests/staff-access.mjs && node tests/access-jwt.mjs && node tests/events.mjs && node tests/event-completion.mjs",
     "test:browser": "node tests/browser-workflow.mjs",
     "db:local": "wrangler d1 migrations apply DB --local",
     "db:remote": "wrangler d1 migrations apply DB --remote",

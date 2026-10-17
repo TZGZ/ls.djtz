@@ -1,5 +1,10 @@
 import handler from 'vinext/server/fetch-handler';
+import {completeExpiredEvents} from './app/event-completion';
 export default {
+ async scheduled(_controller:ScheduledController,env:Cloudflare.Env){
+  const completed=await completeExpiredEvents(env.DB);
+  if(completed)console.info(JSON.stringify({event:'events_auto_completed',count:completed}));
+ },
  async fetch(request:Request, env:Cloudflare.Env, ctx:ExecutionContext){
   const response=await handler.fetch(request,env,ctx);
   const headers=new Headers(response.headers);
